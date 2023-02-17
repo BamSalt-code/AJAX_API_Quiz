@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Contact Us Form</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+</head>
+<style>
+
+body {
+   background-color: #fbfbfb;
+}
+.contact-form {
+    background-color: #fbfbfb;
+    padding: 15px 20px 15px;
+    border: 1px solid #ececec;
+    width: 650px;
+    margin: 50px auto;
+}
+section {
+    background-color: #508bfc;
+}
+.contact-form .form-header {
+    margin-bottom: 40px;
+}
+.contact-form form textarea {
+    max-width: 100%;
+    min-width: 100%;
+    min-height: 120px;
+}
+.contact-form form .btn {
+    width: 100%;
+}
+.contact-form .form-header h2 {
+    font-weight: bold;
+    color: #03A9F4;
+}
+
+/*-- CSS for extra small devices--*/
+@media (max-width: 767px){
+.contact-form {
+    width: 90%;
+}
+button{
+  width:50%;
+  height:50%;
+}
+}
+</style>
+<body>
+<section class="vh-100" style="background-color: #508bfc;">
+<!--method="POST"-->
+<form name="Questions" enctype="multipart/form-data">
+  <section>
+      {% for question in webquestions %}
+      {% set id = loop.index %}
+    <div  class="qbox" id="div-1"> <br>
+    <div class="contact-form">
+        <div class="form-header text-center">
+            <h2 style=" color: #fbfbfb; background-color: #508bfc ! important;">Question {{loop.index}}</h2>  <!-- align="left" -->
+            <h2>{{question|safe}}</h2>
+            <p>Choose Your Answer</p>
+            <div class="row">
+                {% for answer in all_answers[loop.index-1] %}
+                <div class="form-group col-sm-6">
+                      <button style="width:300px; height:60px;" name="{{answer|safe}}" id="Q{{id}} A{{loop.index}}" onclick="Submit('{{answer|safe}}','{{id}}','Q{{id}} A{{loop.index}}')" data-value="value2" value="[['{{answer|safe}}'],[{{id}}]]" class="btn btn-primary">
+                         {{answer|safe}}
+                      </button>
+                </div>
+                {% endfor %}
+            </div>
+             <div id='addmarker{{id}}'></div>
+<!--              <p>The answer is: {{correct_answers[loop.index-1]|safe}}</p>-->
+<!--              <input type="hidden" name="CorrectQuestion{{[loop.index]}}" value="{{correct_answers[loop.index-1]|safe}}" placeholder="{{correct_answers[loop.index-1]|safe}}">-->
+       </div>
+    </div>
+    <input type="hidden" id="QuestionID" name="QuestionID" value={{id}}>
+{% endfor %}
+</form>
+</section>
+
+
+<script>
+    score = 0;
+    question_count = {{Answer_Count}};
+    questions_answered = 0;
+    var user_answers = [];
+
+    function Submit(answer, id, button_id) {
+       var allanswers = {{all_answers|safe}};
+       var correctanswer = {{correct_answers|safe}};
+       for(var i = 1; i <= allanswers[id-1].length; i++) {
+             var button = document.getElementById("Q"+id+" A"+i);
+             button.disabled = true;
+       }
+       if ((answer) == (correctanswer[id-1])) {
+        document.getElementById(button_id).className = "btn btn-outline-success";
+        score = score + 1
+       }
+       else {
+        document.getElementById(button_id).className = "btn btn-outline-danger";
+        var node = document.getElementById("addmarker" + id);
+        node.innerText = "The correct answer is: " + correctanswer[id-1];
+       }
+       questions_answered = questions_answered + 1
+       user_answers.push(answer);
+       alert(user_answers);
+       var Quiz_Data = [
+            {"score": score, "answers": allanswers, "user answers": user_answers}
+          ];
+       if ((questions_answered) == (question_count)) {
+          alert('Quiz Over! Score ' + (score) + '/' + (question_count));
+          alert(Quiz_Data);
+          $.ajax({
+            type: "POST",
+            url: "/",
+            data: JSON.stringify(Quiz_Data),
+            contentType: "application/json",
+            dataType: 'json',
+            success: function(){
+              alert('post success!');
+            },
+            error: function(data){
+               alert(data.error);
+               alert(data.responseText);
+            }
+          });
+       }
+    };
+
+</script>
+<!--          $.post("/",{scores: score});-->
+<div></div>
